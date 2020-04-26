@@ -1,6 +1,6 @@
 # openstreetmap-tile-server-carto
 
-# Forked from [Overv/openstreetmap-tile-server](https://github.com/Overv/openstreetmap-tile-server)
+## Forked from [Overv/openstreetmap-tile-server](https://github.com/Overv/openstreetmap-tile-server)
 
 [![Build Status](https://github.com/mhajder/openstreetmap-tile-server-carto/workflows/Docker/badge.svg)](https://github.com/mhajder/openstreetmap-tile-server-carto/actions?query=workflow%3ADocker) [![](https://images.microbadger.com/badges/image/mhajder/openstreetmap-tile-server-carto.svg)](https://microbadger.com/images/mhajder/openstreetmap-tile-server-carto "openstreetmap-tile-server-carto")
 
@@ -10,14 +10,14 @@ This container allows you to easily set up an OpenStreetMap PNG tile server give
 
 First create a Docker volume to hold the PostgreSQL database that will contain the OpenStreetMap data:
 
-    docker volume create openstreetmap-data
+    docker volume create openstreetmap-carto-data
 
 Next, download an .osm.pbf extract from geofabrik.de for the region that you're interested in. You can then start importing it into PostgreSQL by running a container and mounting the file as `/data.osm.pbf`. For example:
 
 ```
 docker run \
     -v /absolute/path/to/luxembourg.osm.pbf:/data.osm.pbf \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     mhajder/openstreetmap-tile-server-carto \
     import
 ```
@@ -30,10 +30,11 @@ If your import is an extract of the planet and has polygonal bounds associated w
 
 ```
 docker run \
+    --rm \
     -e UPDATES=enabled \
     -v /absolute/path/to/luxembourg.osm.pbf:/data.osm.pbf \
     -v /absolute/path/to/luxembourg.poly:/data.poly \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     mhajder/openstreetmap-tile-server-carto \
     import
 ```
@@ -46,9 +47,10 @@ It is also possible to let the container download files for you rather than moun
 
 ```
 docker run \
+    --rm \
     -e DOWNLOAD_PBF=https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf \
     -e DOWNLOAD_POLY=https://download.geofabrik.de/europe/luxembourg.poly \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     mhajder/openstreetmap-tile-server-carto \
     import
 ```
@@ -60,12 +62,12 @@ Run the server like this:
 ```
 docker run \
     -p 8080:80 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
 
-Your tiles will now be available at `http://localhost:8080/tile/{z}/{x}/{y}.png`. The demo map in `leaflet-demo.html` will then be available on `http://localhost:8080`. Note that it will initially take quite a bit of time to render the larger tiles for the first time.
+Your tiles will now be available at `http://localhost:8080/tile/{z}/{x}/{y}.png`.
 
 ### Using Docker Compose
 
@@ -76,16 +78,16 @@ The `docker-compose.yml` file included with this repository shows how the aforem
 Tiles that have already been rendered will be stored in `/var/lib/mod_tile`. To make sure that this data survives container restarts, you should create another volume for it:
 
 ```
-docker volume create openstreetmap-rendered-tiles
+docker volume create openstreetmap-carto-rendered-tiles
 docker run \
     -p 8080:80 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
-    -v openstreetmap-rendered-tiles:/var/lib/mod_tile \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-rendered-tiles:/var/lib/mod_tile \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
 
-**If you do this, then make sure to also run the import with the `openstreetmap-rendered-tiles` volume to make sure that caching works properly across updates!**
+**If you do this, then make sure to also run the import with the `openstreetmap-carto-rendered-tiles` volume to make sure that caching works properly across updates!**
 
 ### Enabling automatic updating (optional)
 
@@ -95,8 +97,8 @@ Given that you've set up your import as described in the *Automatic updates* sec
 docker run \
     -p 8080:80 \
     -e UPDATES=enabled \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
-    -v openstreetmap-rendered-tiles:/var/lib/mod_tile \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-rendered-tiles:/var/lib/mod_tile \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -110,7 +112,7 @@ To enable the `Access-Control-Allow-Origin` header to be able to retrieve tiles 
 ```
 docker run \
     -p 8080:80 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -e ALLOW_CORS=enabled \
     -d mhajder/openstreetmap-tile-server-carto \
     run
@@ -124,7 +126,7 @@ To connect to the PostgreSQL database inside the container, make sure to expose 
 docker run \
     -p 8080:80 \
     -p 5432:5432 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -142,7 +144,7 @@ docker run \
     -p 8080:80 \
     -p 5432:5432 \
     -e PGPASSWORD=secret \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -158,7 +160,7 @@ The import and tile serving processes use 4 threads by default, but this number 
 docker run \
     -p 8080:80 \
     -e THREADS=24 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -170,7 +172,7 @@ The import and tile serving processes use 800 MB RAM cache by default, but this 
 docker run \
     -p 8080:80 \
     -e "OSM2PGSQL_EXTRA_ARGS=-C 4096" \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -182,7 +184,7 @@ The database use the autovacuum feature by default. This behavior can be changed
 docker run \
     -p 8080:80 \
     -e AUTOVACUUM=off \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -d mhajder/openstreetmap-tile-server-carto \
     run
 ```
@@ -194,8 +196,8 @@ If you are planning to import the entire planet or you are running into memory e
 ```
 docker run \
     -v /absolute/path/to/luxembourg.osm.pbf:/data.osm.pbf \
-    -v openstreetmap-nodes:/nodes \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-nodes:/nodes \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     -e "OSM2PGSQL_EXTRA_ARGS=--flat-nodes /nodes/flat_nodes.bin" \
     mhajder/openstreetmap-tile-server-carto \
     import
@@ -220,7 +222,7 @@ To raise it use `--shm-size` parameter. For example:
 ```
 docker run \
     -p 8080:80 \
-    -v openstreetmap-data:/var/lib/postgresql/12/main \
+    -v openstreetmap-carto-data:/var/lib/postgresql/12/main \
     --shm-size="192m" \
     -d mhajder/openstreetmap-tile-server-carto \
     run
