@@ -50,10 +50,10 @@ if [ "$1" = "import" ]; then
 
     if [ -n "$DOWNLOAD_PBF" ]; then
         echo "INFO: Download PBF file: $DOWNLOAD_PBF"
-        wget -nv "$DOWNLOAD_PBF" -O /data.osm.pbf
+        wget "$WGET_ARGS" "$DOWNLOAD_PBF" -O /data.osm.pbf
         if [ -n "$DOWNLOAD_POLY" ]; then
             echo "INFO: Download PBF-POLY file: $DOWNLOAD_POLY"
-            wget -nv "$DOWNLOAD_POLY" -O /data.poly
+            wget "$WGET_ARGS" "$DOWNLOAD_POLY" -O /data.poly
         fi
     fi
 
@@ -73,7 +73,7 @@ if [ "$1" = "import" ]; then
     fi
 
     # Import data
-    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} ${OSM2PGSQL_EXTRA_ARGS} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf
+    sudo -u renderer osm2pgsql -d gis --create --slim -G --hstore --tag-transform-script /home/renderer/src/openstreetmap-carto/openstreetmap-carto.lua --number-processes ${THREADS:-4} -S /home/renderer/src/openstreetmap-carto/openstreetmap-carto.style /data.osm.pbf ${OSM2PGSQL_EXTRA_ARGS}
 
     # Create indexes
     sudo -u postgres psql -d gis -f indexes.sql
